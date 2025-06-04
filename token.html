@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer Contact Token Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: "Tech Gradient Blues" -->
+    <!-- Application Structure Plan: The SPA is designed as a focused, single-page utility. It features a clear title, an input field for the user's email, a button to initiate token generation, and dedicated areas to display the generated token and real-time status messages. An explanatory section clarifies the purpose and process. This simple, task-oriented structure prioritizes direct user interaction for token generation and clear communication of its status. -->
+    <!-- Visualization & Content Choices: The primary content is the interactive form. Goal: Facilitate token generation and provide feedback. Method: HTML form elements (input, button) styled with Tailwind CSS. Interaction: Button click triggers JavaScript to generate a client-side token and simulate a backend API call. Status messages and the generated token are dynamically updated. A descriptive text block provides context. Justification: A straightforward form is the most effective UI for this specific task. No complex visualizations are needed. No Chart.js/Plotly.js used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to bottom right, #e0f7fa, #e3f2fd); /* light blue gradient */
+            color: #1a202c; /* gray-900 */
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+
+    <div class="bg-white rounded-xl shadow-2xl p-8 md:p-10 w-full max-w-md border border-blue-200">
+        <h1 class="text-3xl md:text-4xl font-bold text-center text-blue-700 mb-6">Developer Contact Token</h1>
+        <p class="text-center text-gray-600 mb-8 leading-relaxed">
+            Generate a unique token to initiate contact with the developer. Once generated, the developer will receive your email and the token, then reach out to you directly.
+        </p>
+
+        <div class="mb-6">
+            <label for="userEmail" class="block text-gray-700 text-sm font-semibold mb-2">
+                Your Email Address
+            </label>
+            <input type="email" id="userEmail" placeholder="your.email@example.com" class="shadow-sm appearance-none border border-gray-300 rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+        </div>
+
+        <button id="generateTokenButton" class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-all duration-300 transform active:scale-98">
+            Generate Token & Send Request
+        </button>
+
+        <div id="statusMessage" class="mt-6 p-3 rounded-lg text-center font-medium hidden">
+            <!-- Status messages will appear here -->
+        </div>
+
+        <div id="generatedTokenDisplay" class="mt-6 p-4 bg-gray-100 rounded-lg border border-gray-200 text-center hidden">
+            <p class="text-gray-700 text-sm mb-2">Your Token:</p>
+            <p id="tokenValue" class="text-2xl font-bold text-indigo-700 break-words"></p>
+            <button id="copyTokenButton" class="mt-3 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
+                Copy Token
+            </button>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-gray-200">
+            <h2 class="text-xl font-bold text-center text-blue-600 mb-4">How It Works</h2>
+            <div class="bg-gray-50 p-4 rounded-lg text-gray-700 text-sm leading-relaxed">
+                <p class="mb-2">1. Enter your email address.</p>
+                <p class="mb-2">2. Click "Generate Token & Send Request".</p>
+                <p class="mb-2">3. A unique token is generated (and displayed to you).</p>
+                <p class="mb-2">4. Your email and the token are sent to the developer's system.</p>
+                <p>5. The developer receives an email notification and will contact you directly using the email you provided.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const userEmailInput = document.getElementById('userEmail');
+            const generateTokenButton = document.getElementById('generateTokenButton');
+            const statusMessageDiv = document.getElementById('statusMessage');
+            const generatedTokenDisplay = document.getElementById('generatedTokenDisplay');
+            const tokenValueSpan = document.getElementById('tokenValue');
+            const copyTokenButton = document.getElementById('copyTokenButton');
+
+            // This is a placeholder for your actual backend API endpoint
+            // You would replace this with the URL of your Google Cloud Function or other backend service
+            const BACKEND_API_ENDPOINT = 'https://your-google-cloud-function-url.cloudfunctions.net/sendContactToken'; 
+
+            const showStatus = (message, type = 'info') => {
+                statusMessageDiv.textContent = message;
+                statusMessageDiv.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800', 'bg-blue-100', 'text-blue-800');
+                if (type === 'success') {
+                    statusMessageDiv.classList.add('bg-green-100', 'text-green-800');
+                } else if (type === 'error') {
+                    statusMessageDiv.classList.add('bg-red-100', 'text-red-800');
+                } else { // info or default
+                    statusMessageDiv.classList.add('bg-blue-100', 'text-blue-800');
+                }
+                statusMessageDiv.classList.remove('hidden');
+            };
+
+            const isValidEmail = (email) => {
+                // Basic email regex for client-side validation
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            };
+
+            const generateClientSideToken = () => {
+                // This is a client-side simulated token. A real token should be generated server-side.
+                return 'TOKEN-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            };
+
+            generateTokenButton.addEventListener('click', async () => {
+                const userEmail = userEmailInput.value.trim();
+
+                if (!isValidEmail(userEmail)) {
+                    showStatus('Please enter a valid email address.', 'error');
+                    return;
+                }
+
+                generateTokenButton.disabled = true;
+                showStatus('Generating token and sending request...', 'info');
+                generatedTokenDisplay.classList.add('hidden'); // Hide previous token if any
+
+                const generatedToken = generateClientSideToken(); // Simulate token generation
+
+                try {
+                    // --- SIMULATED BACKEND CALL ---
+                    // In a real application, you would make a fetch request to your backend:
+                    // const response = await fetch(BACKEND_API_ENDPOINT, {
+                    //     method: 'POST',
+                    //     headers: { 'Content-Type': 'application/json' },
+                    //     body: JSON.stringify({ email: userEmail, token: generatedToken })
+                    // });
+                    // const result = await response.json();
+
+                    // Simulate a backend response after a delay
+                    const simulatedResponse = await new Promise(resolve => setTimeout(() => {
+                        const success = Math.random() > 0.1; // 90% chance of success for demonstration
+                        if (success) {
+                            resolve({ 
+                                ok: true, 
+                                json: () => Promise.resolve({ 
+                                    message: 'Token generated and email sent!', 
+                                    token: generatedToken // Backend would return the real token here
+                                }) 
+                            });
+                        } else {
+                            resolve({ 
+                                ok: false, 
+                                status: 500, 
+                                json: () => Promise.resolve({ 
+                                    error: 'Failed to send token request. Please try again.', 
+                                    errorCode: 'SERVER_ERROR' 
+                                }) 
+                            });
+                        }
+                    }, 2000)); // Simulate network and processing delay
+
+                    if (simulatedResponse.ok) {
+                        const data = await simulatedResponse.json();
+                        showStatus(`✅ ${data.message}`, 'success');
+                        tokenValueSpan.textContent = data.token;
+                        generatedTokenDisplay.classList.remove('hidden');
+                    } else {
+                        const errorData = await simulatedResponse.json();
+                        showStatus(`❌ Request failed: ${errorData.error || 'Unknown error.'}`, 'error');
+                        generatedTokenDisplay.classList.add('hidden');
+                    }
+                } catch (error) {
+                    console.error('Error during token generation request:', error);
+                    showStatus('An unexpected error occurred. Please try again later.', 'error');
+                    generatedTokenDisplay.classList.add('hidden');
+                } finally {
+                    generateTokenButton.disabled = false;
+                }
+            });
+
+            copyTokenButton.addEventListener('click', () => {
+                const tokenText = tokenValueSpan.textContent;
+                // Using document.execCommand('copy') for broader compatibility in iframes
+                const textArea = document.createElement('textarea');
+                textArea.value = tokenText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showStatus('Token copied to clipboard!', 'info');
+                } catch (err) {
+                    console.error('Failed to copy token:', err);
+                    showStatus('Failed to copy token. Please copy manually.', 'error');
+                }
+                document.body.removeChild(textArea);
+            });
+        });
+    </script>
+</body>
+</html>
